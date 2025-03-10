@@ -24,5 +24,5 @@ const io = socketio(expressServer,{
             ]
 })
 
-expressServer.listen(9001);
+expressServer.listen(9000);
 module.exports ={io,expressServer,app}; 
