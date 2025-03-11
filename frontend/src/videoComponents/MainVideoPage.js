@@ -153,17 +153,45 @@ const MainVideoPage =() => {
         clientSocketListeners(socket,dispatch,addIceCandidateToPc);
     },[])
 
-    const addIceCandidateToPc = (iceC)=>{
-        //add an ice candidate form the remote, to the pc
-        for (const s in streamsRef.current){
-            if(s !== 'localStream'){
+    // const addIceCandidateToPc = (iceC)=>{
+    //     //add an ice candidate form the remote, to the pc
+    //     for (const s in streamsRef.current){
+    //         if(s !== 'localStream'){
+    //             const pc = streamsRef.current[s].peerConnection;
+    //             pc.addIceCandidate(iceC);
+    //             console.log("Added an iceCandidate to existing page presence")
+    //             setShowCallInfo(false);
+    //         }
+    //     }
+    // }
+
+    const addIceCandidateToPc = (iceC) => {
+    //add an ice candidate form the remote, to the pc
+        for (const s in streamsRef.current) {
+            if (s !== 'localStream') {
                 const pc = streamsRef.current[s].peerConnection;
-                pc.addIceCandidate(iceC);
-                console.log("Added an iceCandidate to existing page presence")
-                setShowCallInfo(false);
+                if (pc.signalingState === 'stable' || pc.signalingState === 'have-local-offer') {
+                    pc.addIceCandidate(iceC);
+                    console.log("Added an iceCandidate to existing page presence");
+                    setShowCallInfo(false);
+                } else {
+                    console.warn(`Cannot add ICE candidate in state: ${pc.signalingState}`);
+                }
             }
         }
-    }
+    };
+
+    const setRemoteDescription = async (pc, description) => {
+        try {
+            if (pc.signalingState === 'have-local-offer' || pc.signalingState === 'have-remote-offer') {
+                await pc.setRemoteDescription(description);
+            } else {
+                console.warn(`Cannot set remote description in state: ${pc.signalingState}`);
+            }
+        } catch (error) {
+            console.error('Failed to set remote description:', error);
+        }
+    };
 
     const addIce = (iceC)=>{
         //emit a new icecandidate to the signalaing server
