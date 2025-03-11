@@ -94,25 +94,45 @@ const MainVideoPage =() => {
     },[callStatus.audio, callStatus.video, callStatus.haveCreatedOffer])
 
 
+    // useEffect(()=>{
+    //     const asyncAddAnswer = async()=>{
+    //         //listen for changes to callStatus.answer
+    //         //if it exists, we have an answer!
+    //         for(const s in streams){
+    //             if(s !== "localStream"){
+    //                 const pc = streams[s].peerConnection;
+    //                 await pc.setRemoteDescription(callStatus.answer);
+    //                 console.log(pc.signalingState)
+    //                 console.log("Answer added!")
+    //             }
+    //         }
+    //     }
+
+    //     if(callStatus.answer){
+    //         asyncAddAnswer()
+    //     }
+
+    // },[callStatus.answer])
+
     useEffect(()=>{
-        const asyncAddAnswer = async()=>{
-            //listen for changes to callStatus.answer
-            //if it exists, we have an answer!
-            for(const s in streams){
-                if(s !== "localStream"){
-                    const pc = streams[s].peerConnection;
+    const asyncAddAnswer = async()=>{
+        //listen for changes to callStatus.answer
+        //if it exists, we have an answer!
+        for(const s in streams){
+            if(s !== "localStream"){
+                const pc = streams[s].peerConnection;
+                if (pc.signalingState === "have-local-offer") {
                     await pc.setRemoteDescription(callStatus.answer);
                     console.log(pc.signalingState)
                     console.log("Answer added!")
+                } else {
+                    console.warn(`Cannot set remote description in state: ${pc.signalingState}`);
                 }
             }
         }
-
-        if(callStatus.answer){
-            asyncAddAnswer()
-        }
-
-    },[callStatus.answer])
+    }
+    asyncAddAnswer();
+}, [callStatus.answer, streams]);
 
     useEffect(()=> {
 
