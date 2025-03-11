@@ -6,7 +6,8 @@ import ActionButtonCaretDropDown from "../ActionButtonCaretDropDown";
 import getDevices from "../VideoButton/getDevices";
 import startAudioStream from "./startAudioStream";
 
-const AudioButton = ({smallFeedEl})=>{
+
+const AudioButton = ({smallFeedEl}) => {
 
     const dispatch = useDispatch()
     const callStatus = useSelector(state=>state.callStatus);
@@ -57,23 +58,51 @@ const AudioButton = ({smallFeedEl})=>{
         }
     }
 
-    const changeAudioDevice = async(e)=>{
-        //the user changed the desired ouput audio device OR input audio device
-        //1. we need to get that deviceId AND the type
-        const deviceId = e.target.value.slice(5);
-        const audioType = e.target.value.slice(0,5);
-        console.log(e.target.value)
+    // const changeAudioDevice = async(e)=>{
+    //     //the user changed the desired ouput audio device OR input audio device
+    //     //1. we need to get that deviceId AND the type
+    //     const deviceId = e.target.value.slice(5);
+    //     const audioType = e.target.value.slice(0,5);
+    //     console.log(e.target.value)
         
-        if(audioType === "output"){
-            //4 (sort of out of order). update the smallFeedEl
-            //we are now DONE! We dont care about the output for any other reason
-            smallFeedEl.current.setSinkId(deviceId);
-        }else if(audioType === "input"){
-            //2. we need to getUserMedia (permission) 
-            const newConstraints = {
-                audio: {deviceId: {exact: deviceId}},
-                video: callStatus.videoDevice === "default" ? true : {deviceId: {exact: callStatus.videoDevice}},
-            }
+    //     if(audioType === "output"){
+    //     //     //4 (sort of out of order). update the smallFeedEl
+    //     //     //we are now DONE! We dont care about the output for any other reason
+    //         smallFeedEl.current.setSinkId(deviceId);
+    //     }else if(audioType === "input"){
+    //     //     //2. we need to getUserMedia (permission) 
+    //         const newConstraints = {
+    //             audio: {deviceId: {exact: deviceId}},
+    //             video: callStatus.videoDevice === "default" ? true : {deviceId: {exact: callStatus.videoDevice}},
+    //         }
+    //         const stream = await navigator.mediaDevices.getUserMedia(newConstraints)
+    //     //     //3. update Redux with that videoDevice, and that video is enabled
+    //         dispatch(updateCallStatus('audioDevice',deviceId));
+    //         dispatch(updateCallStatus('audio','enabled'))
+    //     //     //5. we need to update the localStream in streams
+    //         dispatch(addStream('localStream',stream))
+    //     //     //6. add tracks - actually replaceTracks
+    //         const [audioTrack] = stream.getAudioTracks();
+
+
+        const changeAudioDevice = async(e)=>{
+    //the user changed the desired output audio device OR input audio device
+    //1. we need to get that deviceId AND the type
+    const deviceId = e.target.value.slice(5);
+    const audioType = e.target.value.slice(0,5);
+    console.log(e.target.value)
+    
+    if(audioType === "output"){
+        //4 (sort of out of order). update the smallFeedEl
+        //we are now DONE! We dont care about the output for any other reason
+        smallFeedEl.current.setSinkId(deviceId);
+    }else if(audioType === "input"){
+        //2. we need to getUserMedia (permission) 
+        const newConstraints = {
+            audio: {deviceId: {exact: deviceId}},
+            video: callStatus.videoDevice === "default" ? true : {deviceId: {exact: callStatus.videoDevice}},
+        }
+        try {
             const stream = await navigator.mediaDevices.getUserMedia(newConstraints)
             //3. update Redux with that videoDevice, and that video is enabled
             dispatch(updateCallStatus('audioDevice',deviceId));
@@ -81,9 +110,15 @@ const AudioButton = ({smallFeedEl})=>{
             //5. we need to update the localStream in streams
             dispatch(addStream('localStream',stream))
             //6. add tracks - actually replaceTracks
-            const [audioTrack] = stream.getAudioTracks();
-            //come back to this later
-
+        } catch (err) {
+            if (err.name === 'OverconstrainedError') {
+                console.error('The constraints provided cannot be satisfied by any available devices.');
+            } else {
+                console.error('Error accessing media devices.', err);
+            }
+        }
+    }
+}
             for(const s in streams){
                 if(s !== "localStream"){
                     //getSenders will grab all the RTCRtpSenders that the PC has
@@ -102,11 +137,10 @@ const AudioButton = ({smallFeedEl})=>{
                     sender.replaceTrack(audioTrack)
                 }
             }
-
         }
     }
 
-    return(
+    return (
         <div className="button-wrapper d-inline-block">
             <i className="fa fa-caret-up choose-audio" onClick={()=>setCaretOpen(!caretOpen)}></i>
             <div className="button mic" onClick={startStopAudio}>
@@ -119,7 +153,7 @@ const AudioButton = ({smallFeedEl})=>{
                             deviceList={audioDeviceList}
                             type="audio"
                         /> : <></>}
-        </div>        
+        </div>
     )
 }
 
