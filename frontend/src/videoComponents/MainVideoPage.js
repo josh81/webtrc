@@ -1,16 +1,16 @@
-import { useEffect, useState,useRef } from "react";
-import { useSearchParams } from "react-router-dom"
-import axios from'axios';
-import './VideoComponents.css'
-import CallInfo from "./CallInfo";
-import ChatWindow from "./ChatWindow";
-import ActionButtons from "./ActionButtons";
-import addStream from '../redux-elements/actions/addStream';
+import axios from 'axios';
+import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import createPeerConnection from "../webRTCutilities/createPeerConnection";
-import socketConnection from '../webRTCutilities/socketConnection';
+import { useSearchParams } from "react-router-dom";
+import addStream from '../redux-elements/actions/addStream';
 import updateCallStatus from "../redux-elements/actions/updateCallStatus";
 import clientSocketListeners from "../webRTCutilities/clientSocketListeners";
+import createPeerConnection from "../webRTCutilities/createPeerConnection";
+import socketConnection from '../webRTCutilities/socketConnection';
+import ActionButtons from "./ActionButtons";
+import CallInfo from "./CallInfo";
+import ChatWindow from "./ChatWindow";
+import './VideoComponents.css';
 
 
 
@@ -93,6 +93,26 @@ const MainVideoPage =() => {
         }
     },[callStatus.audio, callStatus.video, callStatus.haveCreatedOffer])
 
+// CHATGPT FIX?
+    useEffect(()=>{
+        const asyncAddAnswer = async()=>{
+            //listen for changes to callStatus.answer
+            //if it exists, we have an answer!
+            for(const s in streams){
+                if(s !== "localStream"){
+                    const pc = streams[s].peerConnection;
+                    await pc.setRemoteDescription(callStatus.answer);
+                    console.log(pc.signalingState)
+                    console.log("Answer added!")
+                }
+            }
+        }
+
+        if(callStatus.answer){
+            asyncAddAnswer()
+        }
+
+    },[callStatus.answer])
 
     // useEffect(()=>{
     //     const asyncAddAnswer = async()=>{
@@ -101,38 +121,18 @@ const MainVideoPage =() => {
     //         for(const s in streams){
     //             if(s !== "localStream"){
     //                 const pc = streams[s].peerConnection;
-    //                 await pc.setRemoteDescription(callStatus.answer);
-    //                 console.log(pc.signalingState)
-    //                 console.log("Answer added!")
+    //                 if (pc.signalingState === "have-local-offer") {
+    //                     await pc.setRemoteDescription(callStatus.answer);
+    //                     console.log(pc.signalingState)
+    //                     console.log("Answer added!")
+    //                 } else {
+    //                     console.warn(`Cannot set remote description in state: ${pc.signalingState}`);
+    //                 }
     //             }
     //         }
     //     }
-
-    //     if(callStatus.answer){
-    //         asyncAddAnswer()
-    //     }
-
-    // },[callStatus.answer])
-
-    useEffect(()=>{
-    const asyncAddAnswer = async()=>{
-        //listen for changes to callStatus.answer
-        //if it exists, we have an answer!
-        for(const s in streams){
-            if(s !== "localStream"){
-                const pc = streams[s].peerConnection;
-                if (pc.signalingState === "have-local-offer") {
-                    await pc.setRemoteDescription(callStatus.answer);
-                    console.log(pc.signalingState)
-                    console.log("Answer added!")
-                } else {
-                    console.warn(`Cannot set remote description in state: ${pc.signalingState}`);
-                }
-            }
-        }
-    }
-    asyncAddAnswer();
-}, [callStatus.answer, streams]);
+    //     asyncAddAnswer();
+    // }, [callStatus.answer, streams]);
 
     useEffect(()=> {
 
