@@ -27,14 +27,22 @@ io.on('connection',socket=>{
     const handshakeData  = socket.handshake.auth.jwt;
 
     let decodedData
-    try{
-        decodedData = jwt.verify(handshakeData,linkSecret);
-    }catch(err){
-        console.log(err);
-        //these arent the droids were looking for. Star wars...
-        // goodbye.
-        socket.disconnect()
-        return
+    // try{
+    //     decodedData = jwt.verify(handshakeData,linkSecret);
+    // }catch(err){
+    //     console.log(err);
+    //     //these arent the droids were looking for. Star wars...
+    //     // goodbye.
+    //     socket.disconnect()
+    //     return
+    // }
+    try {
+    decodedData = jwt.verify(handshakeData, linkSecret);
+    } catch (err) {
+    console.log("JWT Verification Failed:", err);
+    socket.emit("error", "Invalid authentication token.");
+    socket.disconnect();
+    return;
     }
 
     const { fullName, proId } = decodedData;
