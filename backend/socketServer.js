@@ -98,6 +98,7 @@ io.on('connection',socket=>{
 
     socket.on('newAnswer',({answer,uuid})=>{
         //emit this to the client
+        console.log(`Received answer for UUID ${uuid}:`, answer);
         const socketToSendTo = connectedClients.find(c=>c.uuid == uuid);
         if(socketToSendTo){
             socket.to(socketToSendTo.socketId).emit('answerToClient',answer);
